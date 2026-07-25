@@ -1,3 +1,5 @@
+<img src="art/logo-xi-chatgpt.png" width="110" align="right" alt="ξ logo">
+
 # ξύμβολον (xymbolon)
 
 **囲い込みのないデジタル名刺入れ。選んで、渡すだけ。**
@@ -39,6 +41,11 @@ ancestor of the word "symbol", and per Plato's Symposium, of us all.*
 
 ホストされたページを開くだけ（または `index.html` をダウンロードして任意の https で
 自己ホスト）。バックアップは画面下の JSON 書き出しで。
+
+## Art
+
+アイコン原画（噛み合う割符）: Gemini ／ ξ ロゴ: ChatGPT ／ 選定と組み込み: 人間と Claude。
+Icon art (interlocking token halves) by Gemini; ξ logotype by ChatGPT.
 
 ## License
 
