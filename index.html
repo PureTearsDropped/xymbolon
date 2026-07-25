@@ -57,6 +57,12 @@
   .empty { color: var(--muted); font-size: 13px; text-align: center; padding: 30px 0; line-height: 1.8; }
   .homehint { color: var(--muted); font-size: 11px; text-align: center; margin-top: 14px; line-height: 1.7; }
   .ok { color: var(--accent); font-size: 12px; text-align: center; min-height: 1.2em; margin-top: 8px; }
+  .install {
+    border: 1px dashed var(--line); border-radius: 12px; background: #fff;
+    padding: 10px 12px; margin-top: 14px; font-size: 12px; color: var(--ink2);
+    display: flex; align-items: center; gap: 10px; line-height: 1.6;
+  }
+  .install button { flex: none; }
   /* --- 設定・編集 --- */
   .card {
     border: 1px solid var(--line); border-radius: 14px; background: #fff;
@@ -102,6 +108,7 @@
   <div class="ok" id="msg"></div>
   <p class="homehint">タップすると共有シートが開きます — AirDrop / Quick Share / LocalSend へ。<br>
   受け取る側にアプリは要りません。</p>
+  <div id="install" style="display:none"></div>
 </div>
 
 <div id="view-settings">
@@ -372,6 +379,29 @@ if (S.personas.length === 0) {
 }
 renderHome();
 if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+
+// ---------------- ホーム画面への追加案内 ----------------
+// Android/Chrome: 正式な install prompt API → 本物のボタン。
+// iOS: API が存在しない (Apple の仕様) → 手順の案内だけ表示 (消せる・インストール済みなら非表示)。
+let bip = null;
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+function showInstall(html) {
+  const el = $("install");
+  el.innerHTML = html + ` <button class="small" id="inst_x">閉じる</button>`;
+  el.style.display = "flex";
+  $("inst_x").onclick = () => { el.style.display = "none"; S.hideInstall = true; save(); };
+}
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault(); bip = e;
+  if (standalone || S.hideInstall) return;
+  showInstall(`<span>ホーム画面に置くと、アプリとして使えます（圏外でも起動）。</span>
+    <button class="small" id="inst_go">追加する</button>`);
+  $("inst_go").onclick = async () => { if (bip) { bip.prompt(); bip = null; $("install").style.display = "none"; } };
+});
+if (!standalone && !S.hideInstall && /iPhone|iPad|iPod/.test(navigator.userAgent)) {
+  showInstall(`<span>ホーム画面に置くと、アプリとして使えます（圏外でも起動）:
+    共有ボタン <b>&#x2BAD;</b> → <b>「ホーム画面に追加」</b></span>`);
+}
 </script>
 </body>
 </html>
