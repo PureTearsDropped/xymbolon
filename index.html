@@ -6,6 +6,13 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>ξύμβολον — デジタル名刺入れ</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="ξύμβολον">
+<meta name="theme-color" content="#fcfcfb">
 <style>
   :root {
     --paper: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #8a887f;
@@ -364,6 +371,7 @@ if (S.personas.length === 0) {
   save();
 }
 renderHome();
+if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
 </script>
 </body>
 </html>
