@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.2 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
-<!-- 憲法: ①保存は自分のペルソナのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
+<!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
 <meta charset="utf-8">
@@ -29,7 +29,7 @@
   button.small { font-size: 12px; padding: 6px 10px; }
   button.primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
   .danger { color: #b3261e; }
-  /* --- ホーム: ペルソナタイル (タップ = 渡す) --- */
+  /* --- ホーム: ファセットタイル (タップ = 渡す) --- */
   .tile {
     width: 100%; border: none; border-radius: 18px; padding: 18px;
     display: flex; align-items: center; gap: 16px; margin-bottom: 12px;
@@ -159,7 +159,7 @@ function fold(line) {
 }
 function vcardOf(p) {
   const L = ["BEGIN:VCARD", "VERSION:3.0"];
-  const fn = p.name || p.label;                 // 匿名ペルソナは ラベルが 名乗り (一級市民)
+  const fn = p.name || p.label;                 // 匿名ファセットは ラベルが 名乗り (一級市民)
   L.push(fold("FN:" + esc(fn)));
   L.push(fold("N:" + esc(fn) + ";;;;"));
   if (p.kana) L.push(fold("X-PHONETIC-LAST-NAME:" + esc(p.kana)));
