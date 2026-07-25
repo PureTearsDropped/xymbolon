@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.1 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- 憲法: ①保存は自分のペルソナのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>ξύμβολον — デジタル名刺入れ</title>
+<style>
+  :root {
+    --paper: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #8a887f;
+    --line: #e2e0d9; --accent: #2a78d6;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Hiragino Sans", "Noto Sans CJK JP", sans-serif;
+    background: var(--paper); color: var(--ink);
+    max-width: 560px; margin: 0 auto; padding: 16px 16px 48px;
+  }
+  h1 { font-size: 20px; letter-spacing: .02em; }
+  h1 small { font-size: 12px; color: var(--muted); font-weight: normal; margin-left: 8px; }
+  .sub { color: var(--ink2); font-size: 12px; margin: 4px 0 16px; }
+  .card {
+    border: 1px solid var(--line); border-radius: 14px; background: #fff;
+    padding: 14px; margin-bottom: 10px;
+  }
+  .persona-row { display: flex; align-items: center; gap: 10px; cursor: pointer; }
+  .chip { width: 14px; height: 34px; border-radius: 7px; flex: none; }
+  .persona-row .lbl { font-weight: 600; }
+  .persona-row .nm { color: var(--ink2); font-size: 13px; }
+  .persona-row.sel { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .avatar {
+    width: 72px; height: 72px; border-radius: 50%; object-fit: cover;
+    background: var(--line); flex: none;
+  }
+  .avatar.ph { display: flex; align-items: center; justify-content: center;
+    font-size: 28px; color: #fff; font-weight: 700; }
+  #detail .head { display: flex; gap: 14px; align-items: center; margin-bottom: 10px; }
+  #detail h2 { font-size: 18px; }
+  #detail .fields { font-size: 13px; color: var(--ink2); line-height: 1.8; word-break: break-all; }
+  button {
+    font: inherit; border: 1px solid var(--line); border-radius: 12px;
+    background: #fff; color: var(--ink); padding: 10px 14px; cursor: pointer;
+  }
+  button.primary {
+    background: var(--accent); border-color: var(--accent); color: #fff;
+    font-weight: 700; font-size: 16px; width: 100%; padding: 14px;
+  }
+  button.small { font-size: 12px; padding: 6px 10px; }
+  .btnrow { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
+  label.f { display: block; font-size: 12px; color: var(--ink2); margin-top: 10px; }
+  input[type="text"], input[type="email"], input[type="tel"], input[type="url"] {
+    font: inherit; width: 100%; border: 1px solid var(--line); border-radius: 10px;
+    padding: 9px 10px; margin-top: 3px; background: #fff;
+  }
+  .pair { display: flex; gap: 6px; margin-top: 6px; }
+  .pair input { margin-top: 0; }
+  .colors { display: flex; gap: 8px; margin-top: 6px; }
+  .colors span {
+    width: 28px; height: 28px; border-radius: 50%; cursor: pointer; display: inline-block;
+    border: 2px solid transparent;
+  }
+  .colors span.on { border-color: var(--ink); }
+  #editor { display: none; }
+  body.editing #editor { display: block; }
+  body.editing #main { display: none; }
+  .foot { margin-top: 22px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .foot .hint { font-size: 11px; color: var(--muted); line-height: 1.7; margin-top: 10px; }
+  .danger { color: #b3261e; }
+  .ok { color: var(--accent); font-size: 12px; margin-top: 6px; min-height: 1em; }
+</style>
+</head>
+<body>
+<div id="main">
+  <h1>ξύμβολον <small>デジタル名刺入れ — 選んで、渡すだけ</small></h1>
+  <p class="sub">保存されるのは自分のペルソナだけ（この端末の中のみ）。サーバなし・追跡なし。</p>
+
+  <div id="list"></div>
+  <div class="btnrow">
+    <button id="add">＋ 新しいペルソナ</button>
+  </div>
+
+  <div class="card" id="detail" style="display:none">
+    <div class="head">
+      <div id="d_avatar"></div>
+      <div>
+        <h2 id="d_label"></h2>
+        <div class="fields" id="d_fields"></div>
+      </div>
+    </div>
+    <button class="primary" id="share">この顔で渡す（共有シートへ）</button>
+    <div class="ok" id="msg"></div>
+    <div class="btnrow">
+      <button class="small" id="dl">.vcf を保存</button>
+      <button class="small" id="edit">編集</button>
+      <button class="small danger" id="del">削除</button>
+    </div>
+  </div>
+
+  <div class="foot">
+    <label class="f">イベント名（任意 — 渡す vCard の NOTE に「交換: 日付＋この名前」を刻印）
+      <input type="text" id="event" placeholder="例: 岡山大 公開講座">
+    </label>
+    <div class="btnrow">
+      <button class="small" id="exp">バックアップ書き出し (JSON)</button>
+      <button class="small" id="imp">読み込み</button>
+      <input type="file" id="impfile" accept="application/json" hidden>
+    </div>
+    <p class="hint">
+      渡し方: 「渡す」→ 共有シート → <b>AirDrop</b>（iPhone 同士）/ Quick Share・Bluetooth（Android 同士）/
+      LocalSend（陣営を跨ぐとき）。iOS 17 以降は共有シートを開いた状態で端末を近づけると AirDrop が発火します。<br>
+      受け取った側は表示された連絡先を保存するだけ — 相手にアプリは要りません。<br>
+      自分の .vcf を自分の連絡先に「マイカード」として保存すれば、以後は NameDrop でも渡せます。<br>
+      <b>ξύμβολον</b>（シュンボロン）= 古代ギリシャの割符。出会いの証に陶片を二つに割り、半分ずつ持ち帰った。
+      「われわれ一人ひとりは、合う片割れを探し求める人間の割符である」— プラトン『饗宴』191d
+    </p>
+  </div>
+</div>
+
+<div id="editor" class="card"></div>
+
+<script>
+"use strict";
+// ---------------- 状態 (localStorage のみ — 憲法①) ----------------
+const KEY = "xymbolon_v1";
+const COLORS = ["#2a78d6", "#eb6834", "#1baf7a", "#eda100", "#e87ba4", "#4a3aa7", "#52514e"];
+let S = load();
+function load() {
+  try { const s = JSON.parse(localStorage.getItem(KEY)); if (s && s.personas) return s; } catch (e) {}
+  return { personas: [], sel: null, event: "" };
+}
+function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+const uid = () => Math.random().toString(36).slice(2, 10);
+const $ = (id) => document.getElementById(id);
+
+// ---------------- vCard 3.0 生成 ----------------
+function esc(s) {
+  return String(s).replace(/\\/g, "\\\\").replace(/\n/g, "\\n")
+                  .replace(/,/g, "\\,").replace(/;/g, "\\;");
+}
+function fold(line) {                       // 75 バイト目安で 折返し (継続行は 先頭スペース)
+  const out = []; let cur = line;
+  while (cur.length > 74) { out.push(cur.slice(0, 74)); cur = " " + cur.slice(74); }
+  out.push(cur); return out.join("\r\n");
+}
+function vcardOf(p) {
+  const L = ["BEGIN:VCARD", "VERSION:3.0"];
+  const fn = p.name || p.label;             // 匿名ペルソナは ラベルが 名前 (一級市民)
+  L.push(fold("FN:" + esc(fn)));
+  L.push(fold("N:" + esc(fn) + ";;;;"));
+  if (p.kana) L.push(fold("X-PHONETIC-LAST-NAME:" + esc(p.kana)));
+  if (p.email) L.push(fold("EMAIL;TYPE=INTERNET:" + esc(p.email)));
+  if (p.tel) L.push(fold("TEL;TYPE=CELL:" + esc(p.tel)));
+  let item = 0;
+  for (const u of (p.urls || [])) {
+    if (!u.url) continue;
+    item++;
+    L.push(fold(`item${item}.URL:` + esc(u.url)));
+    if (u.label) L.push(fold(`item${item}.X-ABLabel:` + esc(u.label)));
+  }
+  const notes = [];
+  for (const c of (p.custom || [])) if (c.k && c.v) notes.push(`${c.k}: ${c.v}`);
+  const ev = ($("event") ? $("event").value : S.event || "").trim();
+  const d = new Date();
+  const stamp = `交換: ${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` + (ev ? ` ${ev}` : "");
+  notes.push(stamp);
+  L.push(fold("NOTE:" + esc(notes.join("\n"))));
+  if (p.photo) {
+    const b64 = p.photo.split(",")[1];
+    L.push(fold("PHOTO;ENCODING=b;TYPE=JPEG:" + b64));
+  }
+  L.push("END:VCARD");
+  return L.join("\r\n") + "\r\n";
+}
+function vcfFile(p) {
+  const name = (p.name || p.label).replace(/[\\/:*?"<>|]/g, "_");
+  return new File([vcardOf(p)], name + ".vcf", { type: "text/vcard" });
+}
+
+// ---------------- 表示 ----------------
+function render() {
+  const list = $("list"); list.innerHTML = "";
+  for (const p of S.personas) {
+    const div = document.createElement("div");
+    div.className = "card persona-row" + (p.id === S.sel ? " sel" : "");
+    div.innerHTML = `<span class="chip" style="background:${p.color}"></span>
+      <div><div class="lbl">${escHtml(p.label)}</div>
+      <div class="nm">${escHtml(p.name || "（名前なし）")}</div></div>`;
+    div.onclick = () => { S.sel = p.id; save(); render(); };
+    list.appendChild(div);
+  }
+  const p = S.personas.find(x => x.id === S.sel);
+  $("detail").style.display = p ? "" : "none";
+  if (p) {
+    $("d_label").textContent = p.label;
+    $("d_avatar").innerHTML = p.photo
+      ? `<img class="avatar" src="${p.photo}" alt="">`
+      : `<div class="avatar ph" style="background:${p.color}">${escHtml((p.name || p.label).slice(0, 1))}</div>`;
+    const f = [];
+    if (p.name) f.push(escHtml(p.name) + (p.kana ? `（${escHtml(p.kana)}）` : ""));
+    if (p.email) f.push(escHtml(p.email));
+    if (p.tel) f.push(escHtml(p.tel));
+    for (const u of (p.urls || [])) if (u.url) f.push((u.label ? escHtml(u.label) + ": " : "") + escHtml(u.url));
+    for (const c of (p.custom || [])) if (c.k && c.v) f.push(escHtml(c.k) + ": " + escHtml(c.v));
+    $("d_fields").innerHTML = f.join("<br>");
+  }
+  $("event").value = S.event || "";
+}
+function escHtml(s) {
+  return String(s).replace(/[&<>"']/g, m => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[m]));
+}
+
+// ---------------- 渡す ----------------
+$("share").onclick = async () => {
+  const p = S.personas.find(x => x.id === S.sel); if (!p) return;
+  S.event = $("event").value; save();
+  const file = vcfFile(p);
+  if (navigator.canShare && navigator.canShare({ files: [file] })) {
+    try { await navigator.share({ files: [file] }); $("msg").textContent = "共有シートに渡しました"; }
+    catch (e) { if (e.name !== "AbortError") $("msg").textContent = "共有できず: " + e.message; else $("msg").textContent = ""; }
+  } else {
+    download(file);
+    $("msg").textContent = "この環境は共有シート非対応 → .vcf を保存しました";
+  }
+};
+$("dl").onclick = () => { const p = S.personas.find(x => x.id === S.sel); if (p) download(vcfFile(p)); };
+function download(file) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(file); a.download = file.name;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+}
+
+// ---------------- バックアップ (データ主権) ----------------
+$("exp").onclick = () => {
+  download(new File([JSON.stringify(S, null, 1)], "xymbolon-backup.json", { type: "application/json" }));
+};
+$("imp").onclick = () => $("impfile").click();
+$("impfile").onchange = async (e) => {
+  const f = e.target.files[0]; if (!f) return;
+  try { const s = JSON.parse(await f.text()); if (s && s.personas) { S = s; save(); render(); } }
+  catch (err) { alert("読み込めませんでした"); }
+};
+
+// ---------------- 編集 ----------------
+$("add").onclick = () => openEditor(null);
+$("edit").onclick = () => openEditor(S.personas.find(x => x.id === S.sel));
+$("del").onclick = () => {
+  const p = S.personas.find(x => x.id === S.sel); if (!p) return;
+  if (confirm(`「${p.label}」を削除しますか？`)) {
+    S.personas = S.personas.filter(x => x.id !== p.id); S.sel = S.personas[0]?.id || null;
+    save(); render();
+  }
+};
+function openEditor(p) {
+  const isNew = !p;
+  p = p || { id: uid(), label: "", color: COLORS[S.personas.length % COLORS.length],
+             name: "", kana: "", email: "", tel: "", urls: [{ label: "GitHub", url: "" }],
+             custom: [], photo: null };
+  const ed = $("editor");
+  ed.innerHTML = `
+    <h2 style="font-size:16px">${isNew ? "新しいペルソナ" : "編集"}</h2>
+    <label class="f">ペルソナ名（必須 — 例: 仕事 / 個人 / 匿名）<input type="text" id="e_label"></label>
+    <label class="f">テーマ色</label><div class="colors" id="e_colors"></div>
+    <label class="f">名前（空欄で匿名運用 — ペルソナ名が名乗りになります）<input type="text" id="e_name"></label>
+    <label class="f">よみ<input type="text" id="e_kana"></label>
+    <label class="f">メール<input type="email" id="e_email"></label>
+    <label class="f">電話<input type="tel" id="e_tel"></label>
+    <label class="f">リンク（ラベル + URL）</label><div id="e_urls"></div>
+    <button class="small" id="e_addurl">＋ リンクを足す</button>
+    <label class="f">自由欄（種類 + 値 — NOTE に入ります）</label><div id="e_custom"></div>
+    <button class="small" id="e_addcustom">＋ 自由欄を足す</button>
+    <label class="f">顔写真 / デザイン画像（相手の連絡先の顔になります）
+      <input type="file" id="e_photo" accept="image/*"></label>
+    <div id="e_photoview"></div>
+    <div class="btnrow">
+      <button class="primary" id="e_save" style="width:auto;flex:1">保存</button>
+      <button id="e_cancel">やめる</button>
+    </div>`;
+  $("e_label").value = p.label; $("e_name").value = p.name || "";
+  $("e_kana").value = p.kana || ""; $("e_email").value = p.email || ""; $("e_tel").value = p.tel || "";
+  let color = p.color, photo = p.photo;
+  const cd = $("e_colors");
+  for (const c of COLORS) {
+    const s = document.createElement("span"); s.style.background = c;
+    if (c === color) s.className = "on";
+    s.onclick = () => { color = c; [...cd.children].forEach(x => x.className = ""); s.className = "on"; };
+    cd.appendChild(s);
+  }
+  const urls = JSON.parse(JSON.stringify(p.urls || []));
+  const custom = JSON.parse(JSON.stringify(p.custom || []));
+  function pairRows(holder, arr, ph1, ph2, k1, k2) {
+    holder.innerHTML = "";
+    arr.forEach((row, i) => {
+      const d = document.createElement("div"); d.className = "pair";
+      d.innerHTML = `<input type="text" placeholder="${ph1}" value="${escHtml(row[k1] || "")}" style="flex:1">
+                     <input type="text" placeholder="${ph2}" value="${escHtml(row[k2] || "")}" style="flex:2">`;
+      const [i1, i2] = d.querySelectorAll("input");
+      i1.oninput = () => arr[i][k1] = i1.value;
+      i2.oninput = () => arr[i][k2] = i2.value;
+      holder.appendChild(d);
+    });
+  }
+  pairRows($("e_urls"), urls, "ラベル", "https://…", "label", "url");
+  pairRows($("e_custom"), custom, "種類", "値", "k", "v");
+  $("e_addurl").onclick = () => { urls.push({ label: "", url: "" }); pairRows($("e_urls"), urls, "ラベル", "https://…", "label", "url"); };
+  $("e_addcustom").onclick = () => { custom.push({ k: "", v: "" }); pairRows($("e_custom"), custom, "種類", "値", "k", "v"); };
+  function showPhoto() {
+    $("e_photoview").innerHTML = photo
+      ? `<img class="avatar" src="${photo}" style="margin-top:8px"> <button class="small" id="e_delphoto">画像を外す</button>` : "";
+    const b = $("e_delphoto"); if (b) b.onclick = () => { photo = null; showPhoto(); };
+  }
+  showPhoto();
+  $("e_photo").onchange = (e) => {
+    const f = e.target.files[0]; if (!f) return;
+    const img = new Image();
+    img.onload = () => {
+      const c = document.createElement("canvas"); const SZ = 240;
+      c.width = SZ; c.height = SZ;
+      const s = Math.max(SZ / img.width, SZ / img.height);
+      const w = img.width * s, h = img.height * s;
+      c.getContext("2d").drawImage(img, (SZ - w) / 2, (SZ - h) / 2, w, h);
+      photo = c.toDataURL("image/jpeg", 0.82);
+      showPhoto();
+    };
+    img.src = URL.createObjectURL(f);
+  };
+  $("e_save").onclick = () => {
+    const label = $("e_label").value.trim();
+    if (!label) { alert("ペルソナ名は必須です"); return; }
+    const np = { id: p.id, label, color, name: $("e_name").value.trim(),
+                 kana: $("e_kana").value.trim(), email: $("e_email").value.trim(),
+                 tel: $("e_tel").value.trim(),
+                 urls: urls.filter(u => u.url), custom: custom.filter(c => c.k && c.v), photo };
+    const i = S.personas.findIndex(x => x.id === p.id);
+    if (i >= 0) S.personas[i] = np; else S.personas.push(np);
+    S.sel = np.id; save();
+    document.body.classList.remove("editing"); render();
+  };
+  $("e_cancel").onclick = () => { document.body.classList.remove("editing"); render(); };
+  document.body.classList.add("editing");
+}
+
+// ---------------- 初期化 ----------------
+$("event").oninput = () => { S.event = $("event").value; save(); };
+if (S.personas.length === 0) {
+  S.personas.push({ id: uid(), label: "匿名", color: COLORS[0], name: "", kana: "",
+    email: "", tel: "", urls: [{ label: "GitHub", url: "" }], custom: [], photo: null });
+  S.sel = S.personas[0].id; save();
+}
+render();
+</script>
+</body>
+</html>
