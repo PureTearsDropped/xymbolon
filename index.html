@@ -100,9 +100,9 @@
 <div id="view-settings">
   <div class="bar"><h2>設定</h2><button class="icon" id="back1">←</button></div>
   <div class="card">
-    <h2 style="font-size:14px">ペルソナ</h2>
+    <h2 style="font-size:14px">ファセット</h2>
     <div id="plist"></div>
-    <div class="btnrow"><button id="add">＋ 新しいペルソナ</button></div>
+    <div class="btnrow"><button id="add">＋ 新しいファセット</button></div>
   </div>
   <div class="card">
     <label class="f" style="margin-top:0">イベント名（任意 — 渡す vCard の NOTE に「交換: 日付＋この名前」を刻印）
@@ -118,10 +118,13 @@
     <p class="hint" style="margin-top:8px">データはこの端末の中にだけあります。機種変更のときはこの書き出しで。</p>
   </div>
   <p class="hint">
-    渡し方: ホームでペルソナをタップ → 共有シート → <b>AirDrop</b>（iPhone 同士）/
+    渡し方: ホームでファセットをタップ → 共有シート → <b>AirDrop</b>（iPhone 同士）/
     Quick Share・Bluetooth（Android 同士）/ LocalSend（陣営を跨ぐとき）。
     iOS 17 以降は共有シートを開いた状態で端末を近づけると AirDrop が発火します。<br>
     自分の .vcf を自分の連絡先に「マイカード」として保存すれば、以後は NameDrop でも渡せます。<br><br>
+    <b>ファセット</b> = 宝石のカット面。仮面ではなく、磨かれた本物の面です。
+    プライベート・ビジネス・ウェブ（ペンネーム）など、相手に応じて見せる面を使い分けられます —
+    どの面も、あなたという一つの石の本物の輝きです。<br><br>
     <b>ξύμβολον</b>（シュンボロン）= 古代ギリシャの割符。出会いの証に陶片を二つに割り、半分ずつ持ち帰った。
     「われわれ一人ひとりは、合う片割れを探し求める人間の割符である」— プラトン『饗宴』191d
   </p>
@@ -192,7 +195,7 @@ function vcfFile(p) {
 function renderHome() {
   const t = $("tiles"); t.innerHTML = "";
   if (S.personas.length === 0) {
-    t.innerHTML = `<div class="empty">まだペルソナがありません。<br>右上の ⚙ から作れます。</div>`;
+    t.innerHTML = `<div class="empty">まだファセットがありません。<br>右上の ⚙ から作れます。</div>`;
     return;
   }
   for (const p of S.personas) {
@@ -274,10 +277,10 @@ function openEditor(p) {
              custom: [], photo: null };
   const ed = $("editorbox");
   ed.innerHTML = `
-    <div class="bar"><h2>${isNew ? "新しいペルソナ" : "編集"}</h2><button class="icon" id="e_cancel">←</button></div>
-    <label class="f">ペルソナ名（必須 — 例: 仕事 / 個人 / 匿名）<input type="text" id="e_label"></label>
+    <div class="bar"><h2>${isNew ? "新しいファセット" : "編集"}</h2><button class="icon" id="e_cancel">←</button></div>
+    <label class="f">ファセット名（必須 — 例: ビジネス / プライベート / ウェブ）<input type="text" id="e_label"></label>
     <label class="f">テーマ色</label><div class="colors" id="e_colors"></div>
-    <label class="f">名前（空欄で匿名運用 — ペルソナ名が名乗りになります）<input type="text" id="e_name"></label>
+    <label class="f">名前（空欄なら名前を出さない使い方 — ファセット名やペンネームで名乗れます）<input type="text" id="e_name"></label>
     <label class="f">よみ<input type="text" id="e_kana"></label>
     <label class="f">メール<input type="email" id="e_email"></label>
     <label class="f">電話<input type="tel" id="e_tel"></label>
@@ -341,7 +344,7 @@ function openEditor(p) {
   };
   $("e_save").onclick = () => {
     const label = $("e_label").value.trim();
-    if (!label) { alert("ペルソナ名は必須です"); return; }
+    if (!label) { alert("ファセット名は必須です"); return; }
     const np = { id: p.id, label, color, name: $("e_name").value.trim(),
                  kana: $("e_kana").value.trim(), email: $("e_email").value.trim(),
                  tel: $("e_tel").value.trim(),
@@ -356,7 +359,7 @@ function openEditor(p) {
 
 // ---------------- 初期化 ----------------
 if (S.personas.length === 0) {
-  S.personas.push({ id: uid(), label: "匿名", color: COLORS[0], name: "", kana: "",
+  S.personas.push({ id: uid(), label: "プライベート", color: COLORS[0], name: "", kana: "",
     email: "", tel: "", urls: [{ label: "GitHub", url: "" }], custom: [], photo: null });
   save();
 }
