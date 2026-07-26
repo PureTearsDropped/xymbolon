@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.5 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.6 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -117,6 +117,7 @@
   <p class="homehint">タップすると共有シートが開きます — AirDrop / Quick Share / LocalSend へ。<br>
   受け取る側にアプリは要りません。</p>
   <div id="install" style="display:none"></div>
+  <div id="update" class="install" style="display:none"></div>
 </div>
 
 <div id="view-settings">
@@ -519,7 +520,24 @@ if (S.personas.length === 0) {
   save();
 }
 renderHome();
-if ("serviceWorker" in navigator) navigator.serviceWorker.register("./sw.js").catch(() => {});
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("./sw.js").then((reg) => {
+    // 新版が裏で届いたらバナーで知らせる (キャッシュ優先の「次回反映」を1タップに)
+    reg.addEventListener("updatefound", () => {
+      const nw = reg.installing;
+      if (!nw) return;
+      nw.addEventListener("statechange", () => {
+        if (nw.state === "activated" && navigator.serviceWorker.controller) {
+          const u = $("update");
+          u.style.display = "flex";
+          u.innerHTML = `<span>新しいバージョンが届いています。</span>
+                         <button class="small" id="upd_go">更新</button>`;
+          $("upd_go").onclick = () => location.reload();
+        }
+      });
+    });
+  }).catch(() => {});
+}
 
 // ---------------- ホーム画面への追加案内 ----------------
 // Android/Chrome: 正式な install prompt API → 本物のボタン。
