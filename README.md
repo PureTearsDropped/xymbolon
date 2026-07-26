@@ -5,7 +5,7 @@
 **囲い込みのないデジタル名刺入れ。選んで、渡すだけ。**
 A walled-garden-free digital meishi wallet: pick a persona, hand it over.
 
-> ⚠️ v0.4 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
+> ⚠️ v0.5 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
 
 **▶ 使う / Use it: https://puretearsdropped.github.io/xymbolon/**
 （インストール不要。スマホで開いて「ホーム画面に追加」するとアプリになります）

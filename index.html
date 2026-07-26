@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.4 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.5 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -197,7 +197,18 @@
   </div>
 
   <div class="card">
-    <h2 style="font-size:14px">④ 受け取る側について</h2>
+    <h2 style="font-size:14px">④ URL だけ渡す（連絡先を残さない）</h2>
+    <p class="hint" style="margin-top:0">
+    ファセットの編集画面で「<b>URL だけ渡す</b>」にチェックを入れると、
+    タイルをタップしたとき連絡先（vCard）ではなく<b>最初のリンクだけ</b>が共有されます。
+    相手の連絡帳には何も残らない、いちばん軽い手渡しです。<br><br>
+    LINE の友だち追加 URL と組み合わせると「連絡帳に記録を残さず、LINE の繋がりだけ作る」
+    ことができます。LINE 側で QR を更新すれば渡した URL を後から無効にすることも可能。<br>
+    ※ 一回限りを強制する仕組みではありません（相手はコピーもブックマークもできます）。</p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:14px">⑤ 受け取る側について</h2>
     <p class="hint" style="margin-top:0">
     <b>相手には何も要りません。</b>このアプリも、アカウントも不要。
     受け取った連絡先はスマホ標準の連絡帳にそのまま入ります。<br><br>
@@ -291,7 +302,7 @@ function renderHome() {
     b.innerHTML = `
       <span class="avatar">${p.photo ? "" : escHtml((p.name || p.label).slice(0, 1))}</span>
       <span><span class="t1">${escHtml(p.label)}</span><br>
-      <span class="t2">${escHtml(p.name || "（名前なし）")}</span></span>
+      <span class="t2">${p.urlonly ? "🔗 URL だけ渡す" : escHtml(p.name || "（名前なし）")}</span></span>
       <span class="go">➤</span>`;
     if (p.photo) {                     // src は DOM プロパティで (innerHTML に生値を入れない)
       const img = document.createElement("img");
@@ -303,6 +314,19 @@ function renderHome() {
   }
 }
 async function share(p) {
+  if (p.urlonly) {                     // URLだけ渡す: 連絡帳に何も残さない軽い手渡し
+    const u = (p.urls || []).find(x => x.url);
+    if (!u) { $("msg").textContent = "リンクが未記入です（編集で足してください）"; }
+    else if (navigator.share) {
+      try { await navigator.share({ url: u.url }); $("msg").textContent = "URL を共有シートに渡しました"; }
+      catch (e) { $("msg").textContent = (e.name === "AbortError") ? "" : "共有できず: " + e.message; }
+    } else {
+      try { await navigator.clipboard.writeText(u.url); $("msg").textContent = "URL をコピーしました"; }
+      catch (e) { $("msg").textContent = u.url; }
+    }
+    setTimeout(() => { $("msg").textContent = ""; }, 3000);
+    return;
+  }
   const file = vcfFile(p);
   if (navigator.canShare && navigator.canShare({ files: [file] })) {
     try { await navigator.share({ files: [file] }); $("msg").textContent = "共有シートに渡しました"; }
@@ -334,7 +358,7 @@ function renderSettings() {
     const d = document.createElement("div");
     d.className = "prow";
     d.innerHTML = `<span class="chip"></span>
-      <span><span class="lbl">${escHtml(p.label)}</span><br><span class="nm">${escHtml(p.name || "（名前なし）")}</span></span>
+      <span><span class="lbl">${escHtml(p.label)}</span><br><span class="nm">${p.urlonly ? "🔗 URL だけ渡す" : escHtml(p.name || "（名前なし）")}</span></span>
       <span class="sp">
         <button class="small" data-a="vcf">.vcf</button>
         <button class="small" data-a="edit">編集</button>
@@ -375,6 +399,7 @@ function sanitizePersona(q) {
       .filter(c => c.k && c.v) : [],
     photo: (typeof q.photo === "string" && q.photo.length < 900000 &&
             /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(q.photo)) ? q.photo : null,
+    urlonly: q.urlonly === true,
   };
   return (p.label || p.name) ? p : null;
 }
@@ -409,6 +434,10 @@ function openEditor(p) {
     <label class="f">電話<input type="tel" id="e_tel"></label>
     <label class="f">リンク（ラベル + URL）</label><div id="e_urls"></div>
     <button class="small" id="e_addurl">＋ リンクを足す</button>
+    <label class="f" style="display:flex;gap:8px;align-items:center;font-weight:normal">
+      <input type="checkbox" id="e_urlonly" style="width:auto;margin:0">
+      <span>このファセットは <b>URL だけ</b>渡す（連絡先を残さない — 最初のリンクを共有）</span>
+    </label>
     <label class="f">自由欄（種類 + 値 — NOTE に入ります）</label><div id="e_custom"></div>
     <button class="small" id="e_addcustom">＋ 自由欄を足す</button>
     <label class="f">顔写真 / デザイン画像（相手の連絡先の顔になります）
@@ -418,6 +447,7 @@ function openEditor(p) {
       <button class="primary" id="e_save" style="flex:1">保存</button>
     </div>`;
   $("e_label").value = p.label; $("e_name").value = p.name || "";
+  $("e_urlonly").checked = !!p.urlonly;
   $("e_kana").value = p.kana || ""; $("e_email").value = p.email || ""; $("e_tel").value = p.tel || "";
   let color = p.color, photo = p.photo;
   const cd = $("e_colors");
@@ -472,7 +502,8 @@ function openEditor(p) {
     const np = { id: p.id, label, color, name: $("e_name").value.trim(),
                  kana: $("e_kana").value.trim(), email: $("e_email").value.trim(),
                  tel: $("e_tel").value.trim(),
-                 urls: urls.filter(u => u.url), custom: custom.filter(c => c.k && c.v), photo };
+                 urls: urls.filter(u => u.url), custom: custom.filter(c => c.k && c.v), photo,
+                 urlonly: $("e_urlonly").checked };
     const i = S.personas.findIndex(x => x.id === p.id);
     if (i >= 0) S.personas[i] = np; else S.personas.push(np);
     save(); renderSettings(); view("settings");
