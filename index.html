@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.3 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.4 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -90,10 +90,15 @@
   .btnrow { display: flex; gap: 8px; margin-top: 12px; flex-wrap: wrap; }
   .hint { font-size: 11px; color: var(--muted); line-height: 1.7; margin-top: 12px; }
   .avatar.sm { width: 56px; height: 56px; border-radius: 50%; object-fit: cover; }
-  #view-settings, #view-editor { display: none; }
-  body[data-view="settings"] #view-home, body[data-view="editor"] #view-home { display: none; }
+  #view-settings, #view-editor, #view-guide { display: none; }
+  body[data-view="settings"] #view-home, body[data-view="editor"] #view-home,
+  body[data-view="guide"] #view-home { display: none; }
   body[data-view="settings"] #view-settings { display: block; }
   body[data-view="editor"] #view-editor { display: block; }
+  body[data-view="guide"] #view-guide { display: block; }
+  .steps { font-size: 13px; line-height: 1.9; padding-left: 20px; margin: 0; }
+  .steps li { margin-bottom: 6px; }
+  .steps b { color: var(--ink); }
 </style>
 </head>
 <body data-view="home">
@@ -101,7 +106,10 @@
 <div id="view-home">
   <div class="bar">
     <h1>ξύμβολον</h1>
-    <button class="icon" id="gosettings" title="設定">⚙</button>
+    <span>
+      <button class="icon" id="goguide" title="使い方">？</button>
+      <button class="icon" id="gosettings" title="設定">⚙</button>
+    </span>
   </div>
   <p class="sub">選んで、渡すだけ。</p>
   <div id="tiles"></div>
@@ -142,6 +150,58 @@
     <b>ξύμβολον</b>（シュンボロン）= 古代ギリシャの割符。出会いの証に陶片を二つに割り、半分ずつ持ち帰った。
     「われわれ一人ひとりは、合う片割れを探し求める人間の割符である」— プラトン『饗宴』191d
   </p>
+</div>
+
+<div id="view-guide">
+  <div class="bar"><h2>使い方</h2><button class="icon" id="back2">←</button></div>
+
+  <div class="card">
+    <h2 style="font-size:14px">① 自分の連絡先を登録する</h2>
+    <ol class="steps">
+      <li>ホーム右上の <b>⚙</b> →「<b>＋ 新しいファセット</b>」</li>
+      <li>ラベル（例: ビジネス / プライベート / ウェブ）と、<b>その面で見せたい範囲だけ</b>の
+          名前・メール・電話・URL・写真を入れる</li>
+      <li><b>保存</b> — ホームに色つきのタイルが増えます</li>
+    </ol>
+    <p class="hint">ファセットはいくつでも。仕事用には本名と仕事メール、
+    ウェブ用にはペンネームとGitHubだけ、のように「渡す顔」ごとに作ります。</p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:14px">② 渡す — iPhone 同士（AirDrop）</h2>
+    <ol class="steps">
+      <li>ホームで渡したいファセットの<b>タイルをタップ</b> → 共有シートが開く</li>
+      <li><b>AirDrop</b> を選ぶ</li>
+      <li><b>相手の iPhone に近づける</b>（相手は画面を点けておく）</li>
+      <li>現れた<b>相手のアイコンをタップ</b></li>
+      <li>相手の画面に連絡先のプレビューが出る → 相手が「保存」して完了</li>
+    </ol>
+    <p class="hint">相手が候補に出ないとき: 相手側で 設定 → 一般 → AirDrop →
+    「<b>すべての人（10分間のみ）</b>」にしてもらう。<br>
+    iOS 17 以降は、共有シートを開いたまま端末同士を近づけるだけでも発火します。</p>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:14px">③ 渡す — Android 同士 / 陣営を跨ぐとき</h2>
+    <ol class="steps">
+      <li>Android 同士: 共有シートで <b>Quick Share</b> を選ぶ（あとは②と同じ流れ）</li>
+      <li>iPhone ↔ Android: 双方に <b>LocalSend</b>（無料・オープンソース）を入れると
+          同じ「近づけて渡す」ができます</li>
+      <li>急ぐときはメールやメッセージに添付しても届きます（.vcf は何で運んでも同じ）</li>
+    </ol>
+  </div>
+
+  <div class="card">
+    <h2 style="font-size:14px">④ 受け取る側について</h2>
+    <p class="hint" style="margin-top:0">
+    <b>相手には何も要りません。</b>このアプリも、アカウントも不要。
+    受け取った連絡先はスマホ標準の連絡帳にそのまま入ります。<br><br>
+    ⚙ の<b>イベント名</b>を入れておくと、渡した連絡先のメモ欄に
+    「交換: 日付 イベント名」が刻まれます — 相手が後から
+    「この人、どこで会ったんだっけ」とならないための刻印です。<br><br>
+    豆知識: 相手の連絡帳に既にあなたが登録されている場合、iOS は既存カードを
+    優先するため写真などが更新されないことがあります（仕様です）。</p>
+  </div>
 </div>
 
 <div id="view-editor"><div class="card" id="editorbox"></div></div>
@@ -261,6 +321,8 @@ function escHtml(s) {
 // ---------------- 設定 ----------------
 $("gosettings").onclick = () => { renderSettings(); view("settings"); };
 $("back1").onclick = () => { renderHome(); view("home"); };
+$("goguide").onclick = () => view("guide");
+$("back2").onclick = () => { renderHome(); view("home"); };
 function renderSettings() {
   const l = $("plist"); l.innerHTML = "";
   for (const p of S.personas) {
