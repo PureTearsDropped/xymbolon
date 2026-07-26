@@ -5,7 +5,7 @@
 **囲い込みのないデジタル名刺入れ。選んで、渡すだけ。**
 A walled-garden-free digital meishi wallet: pick a persona, hand it over.
 
-> ⚠️ v0.1 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
+> ⚠️ v0.3 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
 
 ## 名前について / The name
 

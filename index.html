@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.2 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.3 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -167,9 +167,17 @@ function esc(s) {
                   .replace(/,/g, "\\,").replace(/;/g, "\\;");
 }
 function fold(line) {
-  const out = []; let cur = line;
-  while (cur.length > 74) { out.push(cur.slice(0, 74)); cur = " " + cur.slice(74); }
-  out.push(cur); return out.join("\r\n");
+  // vCard 3.0 の折り返しは 75 オクテット以下 (RFC 2426)。UTF-16 の文字数でなく
+  // UTF-8 のバイト数で数え、コードポイント境界でだけ切る (絵文字・𠮷 等を泣き別れさせない)
+  const enc = new TextEncoder();
+  const out = []; let cur = "", len = 0;
+  for (const ch of line) {                       // for..of = コードポイント単位
+    const l = ch.codePointAt(0) < 128 ? 1 : enc.encode(ch).length;
+    if (len + l > 74) { out.push(cur); cur = ""; len = 0; }
+    cur += ch; len += l;
+  }
+  out.push(cur);
+  return out.map((s, i) => (i ? " " + s : s)).join("\r\n");
 }
 function vcardOf(p) {
   const L = ["BEGIN:VCARD", "VERSION:3.0"];
@@ -216,10 +224,15 @@ function renderHome() {
     const b = document.createElement("button");
     b.className = "tile"; b.style.background = p.color;
     b.innerHTML = `
-      <span class="avatar">${p.photo ? `<img src="${p.photo}" alt="">` : escHtml((p.name || p.label).slice(0, 1))}</span>
+      <span class="avatar">${p.photo ? "" : escHtml((p.name || p.label).slice(0, 1))}</span>
       <span><span class="t1">${escHtml(p.label)}</span><br>
       <span class="t2">${escHtml(p.name || "（名前なし）")}</span></span>
       <span class="go">➤</span>`;
+    if (p.photo) {                     // src は DOM プロパティで (innerHTML に生値を入れない)
+      const img = document.createElement("img");
+      img.src = p.photo; img.alt = "";
+      b.querySelector(".avatar").appendChild(img);
+    }
     b.onclick = () => share(p);
     t.appendChild(b);
   }
@@ -253,13 +266,14 @@ function renderSettings() {
   for (const p of S.personas) {
     const d = document.createElement("div");
     d.className = "prow";
-    d.innerHTML = `<span class="chip" style="background:${p.color}"></span>
+    d.innerHTML = `<span class="chip"></span>
       <span><span class="lbl">${escHtml(p.label)}</span><br><span class="nm">${escHtml(p.name || "（名前なし）")}</span></span>
       <span class="sp">
         <button class="small" data-a="vcf">.vcf</button>
         <button class="small" data-a="edit">編集</button>
         <button class="small danger" data-a="del">削除</button>
       </span>`;
+    d.querySelector(".chip").style.background = p.color;   // 色も DOM プロパティ経由
     d.querySelector('[data-a="vcf"]').onclick = () => download(vcfFile(p));
     d.querySelector('[data-a="edit"]').onclick = () => openEditor(p);
     d.querySelector('[data-a="del"]').onclick = () => {
@@ -277,9 +291,37 @@ $("exp").onclick = () => {
   download(new File([JSON.stringify(S, null, 1)], "xymbolon-backup.json", { type: "application/json" }));
 };
 $("imp").onclick = () => $("impfile").click();
+function sanitizePersona(q) {
+  // インポート JSON は信用しない: 項目ごとに型・長さ・形式を検査して作り直す
+  if (!q || typeof q !== "object") return null;
+  const str = (v, max) => (typeof v === "string" ? v.slice(0, max) : "");
+  const p = {
+    id: (typeof q.id === "string" && /^[a-z0-9]{1,16}$/.test(q.id)) ? q.id : uid(),
+    label: str(q.label, 40), name: str(q.name, 80), kana: str(q.kana, 80),
+    email: str(q.email, 120), tel: str(q.tel, 40),
+    color: (typeof q.color === "string" && /^#[0-9a-fA-F]{6}$/.test(q.color)) ? q.color : COLORS[0],
+    urls: Array.isArray(q.urls) ? q.urls.slice(0, 10)
+      .map(u => ({ label: str(u && u.label, 40), url: str(u && u.url, 300) }))
+      .filter(u => u.url) : [],
+    custom: Array.isArray(q.custom) ? q.custom.slice(0, 10)
+      .map(c => ({ k: str(c && c.k, 40), v: str(c && c.v, 200) }))
+      .filter(c => c.k && c.v) : [],
+    photo: (typeof q.photo === "string" && q.photo.length < 900000 &&
+            /^data:image\/(jpeg|png);base64,[A-Za-z0-9+/=]+$/.test(q.photo)) ? q.photo : null,
+  };
+  return (p.label || p.name) ? p : null;
+}
 $("impfile").onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
-  try { const s = JSON.parse(await f.text()); if (s && s.personas) { S = s; save(); renderSettings(); } }
+  try {
+    const s = JSON.parse(await f.text());
+    if (!s || !Array.isArray(s.personas)) throw new Error("形式が違います");
+    const ps = s.personas.slice(0, 24).map(sanitizePersona).filter(Boolean);
+    if (ps.length === 0) throw new Error("有効なファセットがありません");
+    S = { personas: ps, sel: null,
+          event: typeof s.event === "string" ? s.event.slice(0, 80) : "" };
+    save(); renderSettings();
+  }
   catch (err) { alert("読み込めませんでした"); }
 };
 
@@ -338,7 +380,8 @@ function openEditor(p) {
   $("e_addcustom").onclick = () => { custom.push({ k: "", v: "" }); pairRows($("e_custom"), custom, "種類", "値", "k", "v"); };
   function showPhoto() {
     $("e_photoview").innerHTML = photo
-      ? `<img class="avatar sm" src="${photo}" style="margin-top:8px"> <button class="small" id="e_delphoto">画像を外す</button>` : "";
+      ? `<img class="avatar sm" style="margin-top:8px"> <button class="small" id="e_delphoto">画像を外す</button>` : "";
+    if (photo) $("e_photoview").querySelector("img").src = photo;   // src は DOM プロパティで
     const b = $("e_delphoto"); if (b) b.onclick = () => { photo = null; showPhoto(); };
   }
   showPhoto();
