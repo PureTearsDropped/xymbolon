@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.9 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.10.0 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -254,7 +254,7 @@ function load() {
   return { personas: [], sel: null, event: "" };
 }
 function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
-const VER = "0.9";                    // 画面表示用 (冒頭コメントの版と合わせる)
+const VER = "0.10.0";                    // 画面表示用 (冒頭コメントの版と合わせる)
 // イベント刻印が有効か: 名前があり、期限が未設定 or 未来
 function eventActive() {
   if (!(S.event || "").trim()) return false;
