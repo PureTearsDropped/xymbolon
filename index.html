@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.7 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.8 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -115,7 +115,7 @@
   <div id="tiles"></div>
   <div class="ok" id="msg"></div>
   <p class="homehint">タップすると共有シートが開きます — AirDrop / Quick Share / LocalSend へ。<br>
-  受け取る側にアプリは要りません。</p>
+  受け取る側にアプリは要りません。<br><span id="ver" style="opacity:.7"></span></p>
   <div id="install" style="display:none"></div>
   <div id="update" class="install" style="display:none"></div>
 </div>
@@ -247,6 +247,7 @@ function load() {
   return { personas: [], sel: null, event: "" };
 }
 function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
+const VER = "0.8";                    // 画面表示用 (冒頭コメントの版と合わせる)
 const uid = () => Math.random().toString(36).slice(2, 10);
 const $ = (id) => document.getElementById(id);
 function view(v) { document.body.dataset.view = v; }
@@ -533,21 +534,27 @@ if (S.personas.length === 0) {
   save();
 }
 renderHome();
+$("ver").textContent = "v" + VER;
 if ("serviceWorker" in navigator) {
+  // 新版が裏で届いたらバナーで知らせる (キャッシュ優先の「次回反映」を1タップに)
+  const hadController = !!navigator.serviceWorker.controller;   // 初回インストールでは出さない
+  const showUpd = () => {
+    const u = $("update");
+    u.style.display = "flex";
+    u.innerHTML = `<span>新しいバージョンが届いています。</span>
+                   <button class="small" id="upd_go">更新</button>`;
+    $("upd_go").onclick = () => location.reload();
+  };
   navigator.serviceWorker.register("./sw.js").then((reg) => {
-    // 新版が裏で届いたらバナーで知らせる (キャッシュ優先の「次回反映」を1タップに)
-    reg.addEventListener("updatefound", () => {
-      const nw = reg.installing;
-      if (!nw) return;
-      nw.addEventListener("statechange", () => {
-        if (nw.state === "activated" && navigator.serviceWorker.controller) {
-          const u = $("update");
-          u.style.display = "flex";
-          u.innerHTML = `<span>新しいバージョンが届いています。</span>
-                         <button class="small" id="upd_go">更新</button>`;
-          $("upd_go").onclick = () => location.reload();
-        }
-      });
+    const watch = (sw) => { if (sw) sw.addEventListener("statechange", () => {
+      if (sw.state === "activated" && hadController) showUpd();
+    }); };
+    watch(reg.installing);                       // リスナー登録前に発見済みの分を回収
+    if (reg.waiting && hadController) showUpd();
+    reg.addEventListener("updatefound", () => watch(reg.installing));
+    // ホーム画面アプリは再読込されずに復帰するため、前面に戻るたび更新チェック
+    document.addEventListener("visibilitychange", () => {
+      if (document.visibilityState === "visible") reg.update().catch(() => {});
     });
   }).catch(() => {});
 }

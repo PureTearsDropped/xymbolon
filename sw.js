@@ -1,5 +1,5 @@
 // オフライン対応 (キャッシュ優先・ネット到達時に裏で更新) — 外部への通信は一切なし
-const C = "xymbolon-v7";
+const C = "xymbolon-v8";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(C).then((c) => c.addAll(["./", "./index.html", "./manifest.webmanifest", "./icon-180.png"])));
   self.skipWaiting();
@@ -9,7 +9,9 @@ self.addEventListener("fetch", (e) => {
   if (e.request.method !== "GET") return;
   e.respondWith(
     caches.match(e.request).then((hit) => {
-      const net = fetch(e.request).then((res) => {
+      // ページ本体は HTTP キャッシュを飛ばして取りに行く (Pages の max-age で裏更新が遅れないように)
+      const req = e.request.mode === "navigate" ? new Request(e.request, { cache: "no-cache" }) : e.request;
+      const net = fetch(req).then((res) => {
         if (res.ok && new URL(e.request.url).origin === location.origin) {
           const cp = res.clone();
           caches.open(C).then((c) => c.put(e.request, cp));
