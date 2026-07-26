@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.8 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.9 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -112,6 +112,7 @@
     </span>
   </div>
   <p class="sub">選んで、渡すだけ。</p>
+  <p class="ok" id="evnow" style="text-align:left;margin:-8px 0 10px"></p>
   <div id="tiles"></div>
   <div class="ok" id="msg"></div>
   <p class="homehint">タップすると共有シートが開きます — AirDrop / Quick Share / LocalSend へ。<br>
@@ -131,6 +132,10 @@
     <label class="f" style="margin-top:0">イベント名（任意 — 渡す vCard の NOTE に「交換: 日付＋この名前」を刻印）
       <input type="text" id="event" placeholder="例: 〇〇研究会">
     </label>
+    <label class="f">いつまで刻印するか（任意 — 過ぎると自動で刻印されなくなります）
+      <input type="datetime-local" id="eventuntil">
+    </label>
+    <p class="hint" id="evstate" style="margin-top:6px"></p>
   </div>
   <div class="card">
     <div class="btnrow" style="margin-top:0">
@@ -215,7 +220,9 @@
     受け取った連絡先はスマホ標準の連絡帳にそのまま入ります。<br><br>
     ⚙ の<b>イベント名</b>を入れておくと、渡した連絡先のメモ欄に
     「交換: 日付 イベント名」が刻まれます — 相手が後から
-    「この人、どこで会ったんだっけ」とならないための刻印です。<br><br>
+    「この人、どこで会ったんだっけ」とならないための刻印です。
+    「<b>いつまで</b>」に日時を設定しておけば、期限が過ぎると自動で刻印されなくなるので、
+    イベント前に仕込んでおいて消し忘れる心配がありません。<br><br>
     豆知識: 相手の連絡帳に既にあなたが登録されている場合、iOS は既存カードを
     優先するため写真などが更新されないことがあります（仕様です）。</p>
   </div>
@@ -247,7 +254,14 @@ function load() {
   return { personas: [], sel: null, event: "" };
 }
 function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
-const VER = "0.8";                    // 画面表示用 (冒頭コメントの版と合わせる)
+const VER = "0.9";                    // 画面表示用 (冒頭コメントの版と合わせる)
+// イベント刻印が有効か: 名前があり、期限が未設定 or 未来
+function eventActive() {
+  if (!(S.event || "").trim()) return false;
+  if (!S.eventUntil) return true;
+  const t = new Date(S.eventUntil).getTime();
+  return isNaN(t) ? true : Date.now() <= t;
+}
 const uid = () => Math.random().toString(36).slice(2, 10);
 const $ = (id) => document.getElementById(id);
 function view(v) { document.body.dataset.view = v; }
@@ -287,7 +301,7 @@ function vcardOf(p) {
   }
   const notes = [];
   for (const c of (p.custom || [])) if (c.k && c.v) notes.push(`${c.k}: ${c.v}`);
-  const ev = (S.event || "").trim();
+  const ev = eventActive() ? S.event.trim() : "";
   const d = new Date();
   const stamp = `交換: ${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}` + (ev ? ` ${ev}` : "");
   notes.push(stamp);
@@ -306,6 +320,7 @@ function vcfFile(p) {
 
 // ---------------- ホーム: タイル = タップで渡す ----------------
 function renderHome() {
+  $("evnow").textContent = eventActive() ? `⌘ 刻印中: 「${S.event.trim()}」` : "";
   const t = $("tiles"); t.innerHTML = "";
   if (S.personas.length === 0) {
     t.innerHTML = `<div class="empty">まだファセットがありません。<br>右上の ⚙ から作れます。</div>`;
@@ -390,8 +405,22 @@ function renderSettings() {
     l.appendChild(d);
   }
   $("event").value = S.event || "";
+  $("eventuntil").value = S.eventUntil || "";
+  evStateShow();
 }
-$("event").oninput = () => { S.event = $("event").value; save(); };
+function evStateShow() {
+  const el = $("evstate");
+  if (!(S.event || "").trim()) { el.textContent = ""; return; }
+  if (eventActive()) {
+    el.textContent = S.eventUntil
+      ? `刻印中 — ${new Date(S.eventUntil).toLocaleString("ja-JP")} まで自動で入ります`
+      : "刻印中 — 期限なし（消すまで入り続けます）";
+  } else {
+    el.textContent = "期限切れ — もう刻印されません（名前は残っていますが無害です）";
+  }
+}
+$("event").oninput = () => { S.event = $("event").value; save(); evStateShow(); };
+$("eventuntil").oninput = () => { S.eventUntil = $("eventuntil").value; save(); evStateShow(); };
 $("add").onclick = () => openEditor(null);
 $("exp").onclick = () => {
   download(new File([JSON.stringify(S, null, 1)], "xymbolon-backup.json", { type: "application/json" }));
@@ -426,7 +455,9 @@ $("impfile").onchange = async (e) => {
     const ps = s.personas.slice(0, 24).map(sanitizePersona).filter(Boolean);
     if (ps.length === 0) throw new Error("有効なファセットがありません");
     S = { personas: ps, sel: null,
-          event: typeof s.event === "string" ? s.event.slice(0, 80) : "" };
+          event: typeof s.event === "string" ? s.event.slice(0, 80) : "",
+          eventUntil: (typeof s.eventUntil === "string" &&
+                       /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}$/.test(s.eventUntil)) ? s.eventUntil : "" };
     save(); renderSettings();
   }
   catch (err) { alert("読み込めませんでした"); }

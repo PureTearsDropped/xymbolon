@@ -1,5 +1,5 @@
 // オフライン対応 (キャッシュ優先・ネット到達時に裏で更新) — 外部への通信は一切なし
-const C = "xymbolon-v8";
+const C = "xymbolon-v9";
 self.addEventListener("install", (e) => {
   e.waitUntil(caches.open(C).then((c) => c.addAll(["./", "./index.html", "./manifest.webmanifest", "./icon-180.png"])));
   self.skipWaiting();
