@@ -5,7 +5,7 @@
 **囲い込みのないデジタル名刺入れ。選んで、渡すだけ。**
 A walled-garden-free digital meishi wallet: pick a persona, hand it over.
 
-> ⚠️ v0.10.0 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
+> ⚠️ v0.10.1 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
 
 **▶ 使う / Use it: https://puretearsdropped.github.io/xymbolon/**
 （インストール不要。スマホで開いて「ホーム画面に追加」するとアプリになります）
@@ -46,7 +46,7 @@ ancestor of the word "symbol", and per Plato's Symposium, of us all.*
 自己ホスト）。バックアップは画面下の JSON 書き出しで。詳しい手順はアプリ内の「？ 使い方」へ。
 
 **相性のいい道具**: iOS ショートカット
-[「QRコードを作成」](https://www.icloud.com/shortcuts/d201f94c176944ad97eb5b5fdffbada8)
+[「テキストからQRコードを作成」](https://www.icloud.com/shortcuts/e5312247f9ef4711b830b2a310d84ef2)
 を入れると、共有シートから QR 表示（相手に読ませる渡し方）が使えます —
 共有シートに投げるだけの設計なので、こういう拡張が外から自由に足せます。
 
