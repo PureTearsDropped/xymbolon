@@ -7,6 +7,9 @@ A walled-garden-free digital meishi wallet: pick a persona, hand it over.
 
 > ⚠️ v0.3 実験中 / experimental. 生成AI使用・要検証 / AI-assisted; verify.
 
+**▶ 使う / Use it: https://puretearsdropped.github.io/xymbolon/**
+（インストール不要。スマホで開いて「ホーム画面に追加」するとアプリになります）
+
 ## 名前について / The name
 
 **ξύμβολον**（シュンボロン・古アッティカ綴り）は古代ギリシャの割符。出会いの証に陶片を
