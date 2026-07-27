@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.11.0 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
+<!-- ⚠️ 生成AI使用・要検証 / ξύμβολον (xymbolon) v0.11.1 — 囲い込みのないデジタル名刺入れ (単一HTML・サーバなし・解析なし) -->
 <!-- 憲法: ①保存は自分のファセットのみ(端末ローカル) ②非対称な参照のみ ③受け手の要求仕様ゼロ ④外部読込ゼロ ⑤0BSD -->
 <html lang="ja">
 <head>
@@ -252,7 +252,7 @@
     こちらが読む）もできます。<br>
     <b>Android</b>: そのままアプリ内でカメラが開きます（ブラウザ標準機能・追加物なし）。<br>
     <b>iPhone</b>: 純正スキャナを呼び出すため、ショートカット
-    <a href="https://www.icloud.com/shortcuts/5d3953a3d9bf4bbeae719eb4cc5f548b">「QRまたはバーコードをスキャン」</a>
+    <a href="https://www.icloud.com/shortcuts/cc9c45b283094439bc2c86435482726d">「QRまたはバーコードをスキャン」</a>
     を一度だけ追加してください（Apple 審査済み・追加前に中身を確認できます）。
     以後はボタン一つで純正スキャナが開きます。<br>
     読み取った内容はどこにも保存されません。</p>
@@ -280,7 +280,7 @@ function load() {
   return { personas: [], sel: null, event: "" };
 }
 function save() { localStorage.setItem(KEY, JSON.stringify(S)); }
-const VER = "0.11.0";                    // 画面表示用 (冒頭コメントの版と合わせる)
+const VER = "0.11.1";                    // 画面表示用 (冒頭コメントの版と合わせる)
 // イベント刻印が有効か: 名前があり、期限が未設定 or 未来
 function eventActive() {
   if (!(S.event || "").trim()) return false;
